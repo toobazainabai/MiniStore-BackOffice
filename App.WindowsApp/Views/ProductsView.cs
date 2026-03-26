@@ -13,6 +13,7 @@ using App.Core.Utilities;
 using App.Core.Services;
 using App.WindowsApp.Forms;
 using App.Core.Models;
+using System.Drawing.Text;
 
 
 namespace App.WindowsApp.Views
@@ -23,9 +24,9 @@ namespace App.WindowsApp.Views
 
         BindingSource _dgvBindingSource = new BindingSource();
 
-        public ProductsView(IProductService _service)
+        public ProductsView(IProductService service)
         {
-            this._service = _service;
+            this._service = service;
             InitializeComponent();
             dgvProducts.DataSource = _dgvBindingSource;
             dgvProducts.AllowUserToAddRows = false;
@@ -43,38 +44,38 @@ namespace App.WindowsApp.Views
 
         private void ProductsView_Load(object sender, EventArgs e)
         {
-            cmbCategory.Items.Clear();
-            cmbCategory.Items.Add("--ALL--");
-            cmbCategory.Items.AddRange(Enum.GetNames(typeof(ProductCategoryEnum)));
+            cmbCategory.DataSource = new object[] { "--All--" }
+                .Concat(Enum.GetValues<ProductCategoryEnum>().Cast<object>())
+                .ToList();
             cmbCategory.SelectedIndex = 0;
 
-            cmbStockStatus.Items.Clear();
-            cmbStockStatus.Items.Add("--ALL--");
-            cmbStockStatus.Items.AddRange(Enum.GetNames(typeof(ProductStatusEnum)));
+            cmbStockStatus.DataSource = new object[] { "--All--" }
+                .Concat(Enum.GetValues<ProductStatusEnum>().Cast<object>())
+                .ToList();
             cmbStockStatus.SelectedIndex = 0;
 
-            if (_service == null)
-                return;
-
+            if (_service == null) return;
             _dgvBindingSource.DataSource = _service.GetAll();
         }
 
         private void tsAdd_Click(object sender, EventArgs e)
         {
-            ProductForm prodForm =  new ProductForm(ProductFormModeEnum.Add , null);
+            ProductForm prodForm = new ProductForm(ProductFormModeEnum.Add, null, _service);
             prodForm.ShowDialog();
+            RefreshGrid();
         }
 
         private void tsEdit_Click(object sender, EventArgs e)
         {
             Product? selectedProduct = _dgvBindingSource.Current as Product;
-            if ( selectedProduct != null)
+            if (selectedProduct != null)
             {
-                ProductForm prodForm = new ProductForm(ProductFormModeEnum.Edit, selectedProduct);
+                ProductForm prodForm = new ProductForm(ProductFormModeEnum.Edit, selectedProduct, _service);
                 prodForm.ShowDialog();
+                RefreshGrid();
 
             }
-            
+
         }
 
         private void tsView_Click(object sender, EventArgs e)
@@ -82,14 +83,43 @@ namespace App.WindowsApp.Views
             Product? selectedProduct = _dgvBindingSource.Current as Product;
             if (selectedProduct != null)
             {
-                ProductForm prodForm = new ProductForm(ProductFormModeEnum.View, selectedProduct);
+                ProductForm prodForm = new ProductForm(ProductFormModeEnum.View, selectedProduct, _service);
                 prodForm.ShowDialog();
 
             }
+
         }
+        private void RefreshGrid()
+        {
+           string searchText = txtSearch.Text;
+
+            ProductCategoryEnum? selectedCategory =
+                cmbCategory.SelectedItem is ProductCategoryEnum category ? category : null;
+
+            ProductStatusEnum? selectedstatus =
+                cmbStockStatus.SelectedItem is ProductStatusEnum status ? status : null;
+
+            _dgvBindingSource.DataSource = _service.Search(searchText, selectedCategory, selectedstatus);
+        }
+
+
+        private void txtSearch_TextChanged(object sender, EventArgs e)
+        {
+            RefreshGrid();
+        }
+
+        private void cmbCategory_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            RefreshGrid();
+        }
+
+        private void cmbStockStatus_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            RefreshGrid();
+        }
+        // copilet
+
+
+
     }
-    // copilet
-
-
-
 }
