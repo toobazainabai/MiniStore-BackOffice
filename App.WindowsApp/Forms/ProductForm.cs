@@ -16,6 +16,7 @@ namespace App.WindowsApp.Forms
         ProductFormModeEnum _mode;
         Product _product;
         IProductService _service;
+
         public ProductForm(ProductFormModeEnum mode, Product? P, IProductService service)
         {
             InitializeComponent();

@@ -10,11 +10,14 @@ using System.Windows.Forms;
 using App.WindowsApp.Views;
 using App.Core.Contracts;
 using App.Core.Services;
+using System.Configuration;
 
 namespace App.WindowsApp.Forms
 {
     public partial class MainForm : Form
     {
+        String connectionString;
+
         private readonly Dictionary<Type, UserControl> _views = new Dictionary<Type, UserControl>();
         private readonly IProductService _productService;
         private readonly ICustomerService _customerService;
@@ -22,8 +25,9 @@ namespace App.WindowsApp.Forms
         public MainForm()
         {
             InitializeComponent();
-            _productService = new InMemoryProductService();
-            _customerService = new inMemoryCustomerService();
+            connectionString = ConfigurationManager.ConnectionStrings["MiniStoreDB"].ConnectionString;
+            _productService = new DbProductService(connectionString);
+            _customerService = new DbCustomerService(connectionString);
         }
 
         private void pnlContent_Paint(object sender, PaintEventArgs e)
